@@ -1,0 +1,36 @@
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Dois juizes. O PriorityQueue do .NET em um milhao de operacoes
+      # sorteadas, e a INVARIANTE conferida depois de cada operacao -- que e o
+      # que importa, porque um monte torto continua respondendo: ele devolve
+      # itens, na quantidade certa, so que na ordem errada.
+      - name: testes
+        run: dotnet test testes/Fila.Testes/Fila.Testes.csproj -c Release --nologo -v q
+
+      # As medidas rodam para REGISTRAR numeros. Nao ha asseveracao de tempo.
+      - name: os k menores sem ordenar os n
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- kmenores
+
+      - name: a altura do monte
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release --nologo -- altura
